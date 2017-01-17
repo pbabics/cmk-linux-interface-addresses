@@ -1,0 +1,4 @@
+# Linux Interface addresses
+
+This plugin generate list of addresses per interface,
+uses iproute2

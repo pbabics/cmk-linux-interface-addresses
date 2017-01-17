@@ -1,0 +1,66 @@
+#!/usr/bin/python
+#
+# This is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 3.  This test is distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+#
+interface_addresses_default_levels = {
+  "requiredIPv4Addresses" : ('')
+}
+
+def inventory_interface_addresses(info):
+  for line in info:
+    name = line[0]
+    yield name, interface_addresses_default_levels
+
+def check_interface_addresses(item, params, info):
+  for line in info:
+    if line[0] == item:
+      msg = ""
+      state = 0
+
+      requiredAddresses = filter(lambda x: len(x) > 0, params['requiredIPv4Addresses'].split(','))
+
+      hw_address = line[1]
+      ipv4_addresses = filter(lambda x: len(x) > 0, line[2].split(','))
+      ipv6_addresses = filter(lambda x: len(x) > 0, line[3].split(','))
+
+
+      cstate = 'OK'
+      missing = filter(lambda x: x not in ipv4_addresses, requiredAddresses)
+      if len(missing) > 0:
+        state = 2
+        cstate = 'CRIT'
+        for ip in missing:
+          msg += "Missing IPv4: %s, " % ip
+
+      msg += "State: %s, " % cstate
+      if len(ipv4_addresses) > 0:
+        for ip in ipv4_addresses:
+          msg += "IP: %s, " % ip
+      else:
+        msg += "No IPv4 addresses, "
+      
+      if len(ipv6_addresses) > 0:
+        for ip in ipv6_addresses:
+          msg += "IPv6: %s, " % ip
+      else:
+        msg += "No IPv6 addresses, "
+      msg += "HW address: %s" % hw_address
+
+      return state, msg
+
+check_info["interface_addresses"] = {
+  'check_function':            check_interface_addresses,
+  'inventory_function':        inventory_interface_addresses,
+  'service_description':       'Interface %s addresses',
+  'has_perfdata':              False,
+  'group':                     'interface_addresses',
+}
