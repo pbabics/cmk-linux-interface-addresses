@@ -30,5 +30,5 @@ register_check_parameters(
     ),
     TextAscii( title=_("Network interface address"),
     help=_("Addresses of network interface")),
-    "first",
+    "dict",
 )
